@@ -1,7 +1,7 @@
 #include "gui.hpp"
 
-static auto vFontFpath	= "data/FiraMono-Bold.ttf";
-static auto vStyleSheet = R"(
+static auto vFontFpath		= "data/FiraMono-Bold.ttf";
+static auto vStyleSheet		= R"(
 QWidget {
   background: black;
   alternate-background-color: dark-gray;
@@ -11,18 +11,22 @@ QWidget {
   selection-color: light-cyan;
 }
 )";
+static auto vKeyHintsText = "<space> to pause; k to kill; q to quit;";
 
 namespace nGui {
 /* tApp */
 tApp::tApp(int vArgC, char **vArgV)
-	: QApplication(vArgC, vArgV), vWinRef{std::make_shared<tWin>()} {
+	: QApplication(vArgC, vArgV), vWin{std::make_shared<tWin>()} {
 	this->setStyleSheet(vStyleSheet);
+  this->vWin->fSetKeyCallback('q', QApplication::quit);
 }
 /* tWin */
 tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 	: QWidget(vParentPtr, vFlags)
 	, vLayout{std::make_shared<QVBoxLayout>(this)}
-	, vUnitMonitor{std::make_shared<tUnitMonitor>(this)} {
+	, vUnitMonitor{std::make_shared<tUnitMonitor>(this)}
+	, vInfoLabel{std::make_shared<QLabel>("some random information", this)}
+	, vKeyHints{std::make_shared<QLabel>(vKeyHintsText, this)} {
 	this->setWindowTitle(dProjName);
 
 	this->setLayout(this->vLayout.get());
@@ -34,21 +38,19 @@ tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 	}
 	this->vLayout->addWidget(this->vUnitMonitor.get(), 8);
 
-  auto vHSep0 = new QFrame(this);
-  vHSep0->setFrameShape(QFrame::HLine);
-  vHSep0->setLineWidth(1);
+	auto vHSep0 = new QFrame(this);
+	vHSep0->setFrameShape(QFrame::HLine);
+	vHSep0->setLineWidth(1);
 	this->vLayout->addWidget(vHSep0, 1);
 
-	this->vLayout->addWidget(new QLabel("", this), 1);
+	this->vLayout->addWidget(this->vInfoLabel.get(), 1);
 
-  auto vHSep1 = new QFrame(this);
-  vHSep1->setFrameShape(QFrame::HLine);
-  vHSep1->setLineWidth(1);
+	auto vHSep1 = new QFrame(this);
+	vHSep1->setFrameShape(QFrame::HLine);
+	vHSep1->setLineWidth(1);
 	this->vLayout->addWidget(vHSep1, 1);
 
-	auto vKeyboardPrompt
-		= new QLabel("<space> to pause; k to kill; q to quit;", this);
-	this->vLayout->addWidget(vKeyboardPrompt, 1);
+	this->vLayout->addWidget(this->vKeyHints.get(), 1);
 
 	fmt::println("[vFontFpath]={};", vFontFpath);
 	auto vFontIndex = QFontDatabase::addApplicationFont(vFontFpath);
@@ -66,6 +68,12 @@ tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 	this->resize(vScreenRect.width() / 2, vScreenRect.height());
 
 	this->show();
+}
+void tWin::keyPressEvent(QKeyEvent *vQKeyEvent) {
+  auto vQKeyBytes = vQKeyEvent->text().toUtf8().constData();
+  fmt::println(stderr, "[vQKeyBytes]={}", vQKeyBytes);
+  this->fTryKeyCallback(vQKeyBytes[0]);
+  QWidget::keyPressEvent(vQKeyEvent);
 }
 /* tUnitMonitor */
 tUnitMonitor::tUnitMonitor(QWidget *vParentPtr)
