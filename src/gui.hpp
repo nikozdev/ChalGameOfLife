@@ -6,7 +6,7 @@
 namespace nGui {
 class tApp;
 class tWin;
-class tStatsView;
+class tUnitMonitor;
 }//namespace nGui
 namespace nGui {
 class tApp: public QApplication {
@@ -16,7 +16,7 @@ public:
 
 private:
 
-  std::shared_ptr<tWin> vWinRef;
+	std::shared_ptr<tWin> vWinRef;
 };
 class tWin: public QWidget {
 public:
@@ -25,7 +25,19 @@ public:
 
 private:
 
-  std::shared_ptr<QVBoxLayout> vLayout;
+	std::shared_ptr<QVBoxLayout>	vLayout;
+	std::shared_ptr<tUnitMonitor> vUnitMonitor;
+};
+class tUnitMonitor: public QScrollArea {
+public:
+
+	tUnitMonitor(QWidget *vParentPtr);
+
+  void fAddWidget(QWidget* vWidgetPtr);
+
+private:
+
+	std::shared_ptr<QVBoxLayout> vLayout;
 };
 }//namespace nGui
 namespace nGui {
