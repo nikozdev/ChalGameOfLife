@@ -1,5 +1,3 @@
-#pragma clang diagnostic ignored "-Wunknown-argument"
-
 #ifndef dChalGameOfLife_top_hpp
 #define dChalGameOfLife_top_hpp
 
@@ -10,8 +8,12 @@
 
 #include <memory>
 
-#include <vector>
 #include <algorithm>
+#include <array>
+#include <vector>
+#include <initializer_list>
+#include <map>
+#include <unordered_map>
 
 #include <optional>
 #include <functional>
@@ -23,6 +25,10 @@
 #include <thread>
 #include <future>
 
+#include <iostream>
+
+#include <filesystem>
+
 /* fmt */
 
 #include <fmt/format.h>
@@ -30,5 +36,8 @@
 #include <fmt/ranges.h>
 
 /* qt6 */
+
+#include <QtGlobal>
+#include <QtWidgets>
 
 #endif//dChalGameOfLife_top_hpp

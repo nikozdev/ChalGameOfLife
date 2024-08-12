@@ -26,7 +26,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # exec
 
-set(vExeName ${vProjName}_exe)
+set(vExeName p${vProjName}.exe)
 set(vExePath ${CMAKE_BINARY_DIR}/${vExeName}.exe)
 
 add_executable(${vExeName})
@@ -34,6 +34,7 @@ target_sources(${vExeName} PRIVATE ${vSrcPathArray})
 target_compile_definitions(${vExeName} PRIVATE
   dProjName="${vProjName}"
   dProjPath="${vProjPath}"
+  QT_DISABLE_DEPRECATED_UP_TO=0x050f00
   ) # target_compile_definitions
 target_precompile_headers(${vExeName} PRIVATE ./src/top.hpp)
 target_compile_options(${vExeName} PRIVATE
