@@ -56,8 +56,8 @@ private:
 };
 }//namespace nGui
 namespace nGui {
-int fRun(int vArgC, char **vArgV);
-int fTry(int vArgC, char **vArgV);
+bool fRun(int vArgC, char **vArgV);
+bool fTry(int vArgC, char **vArgV);
 }//namespace nGui
 
 #endif//dChalGameOfLife_gui_hpp

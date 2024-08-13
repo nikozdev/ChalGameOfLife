@@ -6,10 +6,10 @@
 #include "gui.hpp"
 
 namespace nExe {
-int fRun(int vArgC, char** vArgV);
-int fTry(int vArgC, char** vArgV);
-}
+bool fRun(int vArgC, char **vArgV);
+bool fTry(int vArgC, char **vArgV);
+}//namespace nExe
 
-extern int main(int vArgC, char** vArgV);
+extern int main(int vArgC, char **vArgV);
 
 #endif//dChalGameOfLife_exe_hpp

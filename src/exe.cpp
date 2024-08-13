@@ -1,10 +1,10 @@
 #include "exe.hpp"
 
 namespace nExe {
-int fRun(int vArgC, char **vArgV) {
-  return 0;
+bool fRun(int vArgC, char **vArgV) {
+  return 1;
 }
-int fTry(int vArgC, char **vArgV) {
+bool fTry(int vArgC, char **vArgV) {
   fmt::println(stderr, "[exe]=(");
   fmt::println(stderr, "[vArgC]={};", vArgC);
   fmt::println(stderr, "[vArgV][0]={};", vArgV[0]);
@@ -12,15 +12,15 @@ int fTry(int vArgC, char **vArgV) {
   fmt::println(stderr, "[dWorkPath]={};", std::filesystem::current_path().c_str());
   nGui::fTry(vArgC, vArgV);
   fmt::println(stderr, ")=[exe]");
-	return 0;
+	return 1;
 }
 }//namespace nExe
 
 int main(int vArgC, char **vArgV) {
   if constexpr (0) {
-    return nExe::fRun(vArgC, vArgV);
+    return nExe::fRun(vArgC, vArgV) ? 0 : 1;
   }
   else {
-    return nExe::fTry(vArgC, vArgV);
+    return nExe::fTry(vArgC, vArgV) ? 0 : 1;
   }
 }

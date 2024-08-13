@@ -18,7 +18,7 @@ namespace nGui {
 tApp::tApp(int vArgC, char **vArgV)
 	: QApplication(vArgC, vArgV), vWin{std::make_shared<tWin>()} {
 	this->setStyleSheet(vStyleSheet);
-  this->vWin->fSetKeyCallback('q', QApplication::quit);
+	this->vWin->fSetKeyCallback('q', QApplication::quit);
 }
 /* tWin */
 tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
@@ -70,10 +70,10 @@ tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 	this->show();
 }
 void tWin::keyPressEvent(QKeyEvent *vQKeyEvent) {
-  auto vQKeyBytes = vQKeyEvent->text().toUtf8().constData();
-  fmt::println(stderr, "[vQKeyBytes]={}", vQKeyBytes);
-  this->fTryKeyCallback(vQKeyBytes[0]);
-  QWidget::keyPressEvent(vQKeyEvent);
+	auto vQKeyBytes = vQKeyEvent->text().toUtf8().constData();
+	fmt::println(stderr, "[vQKeyBytes]={}", vQKeyBytes);
+	this->fTryKeyCallback(vQKeyBytes[0]);
+	QWidget::keyPressEvent(vQKeyEvent);
 }
 /* tUnitMonitor */
 tUnitMonitor::tUnitMonitor(QWidget *vParentPtr)
@@ -85,16 +85,18 @@ void tUnitMonitor::fAddWidget(QWidget *vWidgetPtr) {
 }
 }//namespace nGui
 namespace nGui {
-int fRun(int vArgC, char **vArgV) {
-	return 0;
+bool fRun(int vArgC, char **vArgV) {
+	return 1;
 }
-int fTry(int vArgC, char **vArgV) {
+bool fTry(int vArgC, char **vArgV) {
 	fmt::println(stderr, "[gui]=(");
 	fmt::println(stderr, R"([QT_VERSION_STR]="{}";)", QT_VERSION_STR);
 	auto vApp					 = tApp(vArgC, vArgV);
 	auto vAppErrorCode = vApp.exec();
 	fmt::println(stderr, R"([vAppErrorCode]="{}";)", vAppErrorCode);
+	if(vAppErrorCode) {
+	}
 	fmt::println(stderr, ")=[gui]");
-	return vAppErrorCode;
+	return 1;
 }
 }//namespace nGui
