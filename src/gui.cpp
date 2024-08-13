@@ -52,13 +52,13 @@ tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 
 	this->vLayout->addWidget(this->vKeyHints.get(), 1);
 
-	fmt::println("[vFontFpath]={};", vFontFpath);
+	fLogErr("vFontFpath", "\"{}\";", vFontFpath);
 	auto vFontIndex = QFontDatabase::addApplicationFont(vFontFpath);
-	fmt::println("[vFontIndex]={};", vFontIndex);
+	fLogErr("vFontIndex", "{};", vFontIndex);
 	auto vFontIdentArray = QFontDatabase::applicationFontFamilies(vFontIndex);
-	fmt::println("[vFontIdentArray][length]={};", vFontIdentArray.length());
+	fLogErr("vFontIdentArray.length()", "{};", vFontIdentArray.length());
 	auto vFontIdent = vFontIdentArray.at(0);
-	fmt::println("[vFontIdent]={};", vFontIdent.toUtf8().constData());
+	fLogErr("vFontIdent", "\"{}\";", vFontIdent.toUtf8().constData());
 	auto vFontEntry = QFont(vFontIdent, 16);
 	vFontEntry.setBold(true);
 	this->setFont(vFontEntry);
@@ -71,7 +71,7 @@ tWin::tWin(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 }
 void tWin::keyPressEvent(QKeyEvent *vQKeyEvent) {
 	auto vQKeyBytes = vQKeyEvent->text().toUtf8().constData();
-	fmt::println(stderr, "[vQKeyBytes]={}", vQKeyBytes);
+	fLogErr("vQKeyBytes", "{};", vQKeyBytes);
 	this->fTryKeyCallback(vQKeyBytes[0]);
 	QWidget::keyPressEvent(vQKeyEvent);
 }
@@ -90,10 +90,10 @@ bool fRun(int vArgC, char **vArgV) {
 }
 bool fTry(int vArgC, char **vArgV) {
 	fmt::println(stderr, "[gui]=(");
-	fmt::println(stderr, R"([QT_VERSION_STR]="{}";)", QT_VERSION_STR);
+	fLogErr("QT_VERSION_STR", "\"{}\";", QT_VERSION_STR);
 	auto vApp					 = tApp(vArgC, vArgV);
 	auto vAppErrorCode = vApp.exec();
-	fmt::println(stderr, R"([vAppErrorCode]="{}";)", vAppErrorCode);
+	fLogErr("vAppErrorCode", "{};", vAppErrorCode);
 	if(vAppErrorCode) {
 	}
 	fmt::println(stderr, ")=[gui]");

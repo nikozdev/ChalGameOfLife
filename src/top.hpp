@@ -21,19 +21,11 @@
 #include <string>
 #include <string_view>
 
-#include <chrono>
-namespace nExe {
-using namespace std::literals::chrono_literals;
-using tTimeCount = std::chrono::nanoseconds;
-using tTimePoint = std::chrono::time_point<tTimeCount>;
-using tTimeClock = std::chrono::steady_clock;
-}
-
 #include <random>
 namespace nExe {
-static inline std::random_device vRandomDev;
-static inline std::mt19937 vRandomGen(vRandomDev());
-}
+inline static std::random_device vRandomDev;
+inline static std::mt19937			 vRandomGen(vRandomDev());
+}//namespace nExe
 
 #include <thread>
 #include <future>
@@ -42,11 +34,25 @@ static inline std::mt19937 vRandomGen(vRandomDev());
 
 #include <filesystem>
 
+#include <exception>
+
 /* fmt */
 
 #include <fmt/format.h>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+
+#define fLog(vStream, vHeader, vString, ...)                \
+	({                                                        \
+		fmt::println(                                           \
+			vStream,                                              \
+			"[{Header}]=(\n{String}\n)=[{Header}]",               \
+			fmt::arg("Header", vHeader),                          \
+			fmt::arg("String", fmt::format(vString, __VA_ARGS__)) \
+		);                                                      \
+	})//fLog
+#define fLogOut(...) ({ fLog(stdout, __VA_ARGS__); })
+#define fLogErr(...) ({ fLog(stderr, __VA_ARGS__); })
 
 /* qt6 */
 
