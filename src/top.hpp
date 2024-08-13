@@ -22,6 +22,19 @@
 #include <string_view>
 
 #include <chrono>
+namespace nExe {
+using namespace std::literals::chrono_literals;
+using tTimeCount = std::chrono::nanoseconds;
+using tTimePoint = std::chrono::time_point<tTimeCount>;
+using tTimeClock = std::chrono::steady_clock;
+}
+
+#include <random>
+namespace nExe {
+static inline std::random_device vRandomDev;
+static inline std::mt19937 vRandomGen(vRandomDev());
+}
+
 #include <thread>
 #include <future>
 
