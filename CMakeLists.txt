@@ -44,8 +44,24 @@ target_compile_options(${vExeName} PRIVATE
 
 ## libs
 
-find_package(fmt REQUIRED)
-target_link_libraries(${vExeName} PRIVATE fmt::fmt)
+include(FetchContent)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-target_link_libraries(${vExeName} PRIVATE Qt6::Widgets)
+function(fAddPackage vPackName vCompName vLinkName vRepoUrl vRepoTag)
+  find_package(${vPackName} COMPONENTS ${vCompName} QUIET)
+  if(${vPackName}_FOUND)
+    message(STATUS "Package has been found: \"${vPackName}\"; comp: \"${vCompName}\";")
+  else()
+    message(STATUS "Package is being fetched: \"${vPackName}\" comp: \"${vCompName}\";")
+    FetchContent_Declare(${vPackName}
+      GIT_REPOSITORY  ${vRepoUrl}
+      GIT_TAG         ${vRepoTag}
+      GIT_SHALLOW     TRUE
+    )
+    FetchContent_MakeAvailable(${vPackName})
+    find_package(${vPackName} COMPONENTS ${vCompName} REQUIRED)
+  endif()
+  target_link_libraries(${vExeName} PRIVATE ${vLinkName})
+endfunction(fAddPackage)
+
+fAddPackage("fmt" "" "fmt::fmt" "https://github.com/fmtlib/fmt.git" "11.0.2")
+fAddPackage("Qt6" "Widgets" "Qt6::Widgets" "https://code.qt.io/qt/qt5.git" "v6.7.2")
