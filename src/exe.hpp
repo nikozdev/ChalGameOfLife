@@ -7,52 +7,71 @@
 
 namespace nExe {
 class tOrganism {
+public://consdef
+
+	static constexpr auto vAntibioSurviveChance = 3;
+	static constexpr auto vAntibioKillingChance = 10;
+	static_assert(
+		vAntibioSurviveChance < vAntibioKillingChance,
+		"survival chance is included in the killing chance;"
+		"an organism survives if a random value [1,AntibioKillingChance]"
+		" is less than or equal to the AntibioSurviveChance;"
+		"an organism dies if a random value [1,AntibioKillingChance]"
+		" is more than the AntibioSurviveChance;"
+	);
+
 public://codetor
 
-	tOrganism();
+	tOrganism(std::optional<tOrganism> vAncestor = {});
 
 public://getters
 
-	inline auto fGetAliveTimeSince() {
-		return this->vAliveTimeSince;
+	inline auto fGetAliveStepCount() const {
+		return this->vAliveStepCount;
 	}
-	inline auto fGetAliveTimeCount() {
-		return this->vAliveTimeCount;
-	}
-	inline auto fGetAliveTimeUntil() {
-		return this->vAliveTimeSince + this->vAliveTimeCount;
+	inline auto fGetAliveStepLimit() const {
+		return this->vAliveStepLimit;
 	}
 
-	inline auto fGetReproTimeSince() {
-		return this->vReproTimeSince;
+	inline auto fGetReproStepCount() const {
+		return this->vReproStepCount;
 	}
-	inline auto fGetReproTimeCount() {
-		return this->vReproTimeCount;
+	inline auto fGetReproStepLimit() const {
+		return this->vReproStepLimit;
 	}
-	inline auto fGetReproTimeUntil() {
-		return this->vReproTimeSince + this->vReproTimeCount;
+	inline auto fGetReproIndex() const {
+		return this->vReproIndex;
+	}
+
+public://vetters
+
+	inline auto fVetAlive(bool vAliveValue = 1) const {
+		return (this->vAliveValue == vAliveValue);
 	}
 
 public://actions
 
-	bool fUpd();
+	std::optional<tOrganism> fRunStep();
 
 	bool fTryAntibio();
 
 private://actions
 
-	bool fTryDiying();
-	bool fTryRepro();
+	bool fTryDeath();
+
+	std::optional<tOrganism> fTryRepro();
 
 private://vardefs
 
 	//lifetime
-	tTimePoint vAliveTimeSince;//the birthday of my self
-	tTimeCount vAliveTimeCount;//the death of my self?
+	long			 vAliveStepCount;//how many steps since birth?
+	const long vAliveStepLimit;//how many steps until death?
+	bool			 vAliveValue;		 //are we alive?
 
 	//reproduction
-	tTimePoint vReproTimeSince;//this is our birthday by default
-	tTimeCount vReproTimeCount;//the birth of my next child?
+	long			 vReproStepCount;//how many steps since the last reproduction?
+	const long vReproStepLimit;//how many steps until the next reproduction?
+	const long vReproIndex;		 //the current generation number
 };
 }//namespace nExe
 namespace nExe {
