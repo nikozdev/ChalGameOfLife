@@ -6,15 +6,39 @@
 //{
 
 /* simulation being class
- * - reproduces itself once in a constant amount of time
- * - dies after a constant amount of time
- * - can have a parent, inheriting it's timing settings
  */
-class tSimBeing {
+class tSimBeing: public QObject {
+	Q_OBJECT
+
+public://codetor
+
+	tSimBeing(tSimBeing *vAncestor = nullptr);
+	~tSimBeing();
+
+public://actions
+
+	void fRun();
+
+public slots:
+
+	void fTryRepro();
+	void fTryDeath();
+
+signals:
+
+	void sTryReproCall(tSimBeing *vSimBeing);
+	void sTryDeathCall(tSimBeing *vSimBeing);
+
 public://consdef
 
 	static constexpr auto vAntibioSurviveChance = 3;
 	static constexpr auto vAntibioKillingChance = 10;
+
+	inline static auto vReproTimerLimitRange = std::uniform_int_distribution<
+		int>(10'000, 30'000);
+	inline static auto vAliveTimerLimitRange = std::uniform_int_distribution<
+		int>(10'000, 30'000);
+
 	static_assert(
 		vAntibioSurviveChance < vAntibioKillingChance,
 		"survival chance is included in the killing chance;"
@@ -24,61 +48,21 @@ public://consdef
 		" is more than the AntibioSurviveChance;"
 	);
 
-public://codetor
+public://datadef
 
-	tSimBeing(std::optional<tSimBeing> vAncestor = {});
+	QTimer													vAliveTimer;
+	const std::chrono::milliseconds vAliveTimerPoint;//how long since birth?
+	const std::chrono::milliseconds vAliveTimerLimit;//how long until death?
 
-public://actions
-
-	std::optional<tSimBeing> fRunStep();
-
-	bool fTryAntibio();
-
-private://actions
-
-	bool fTryDeath();
-
-	std::optional<tSimBeing> fTryRepro();
-
-public://getters
-
-	inline auto fGetAliveStepCount() const {
-		return this->vAliveStepCount;
-	}
-	inline auto fGetAliveStepLimit() const {
-		return this->vAliveStepLimit;
-	}
-
-	inline auto fGetReproStepCount() const {
-		return this->vReproStepCount;
-	}
-	inline auto fGetReproStepLimit() const {
-		return this->vReproStepLimit;
-	}
-	inline auto fGetReproIndex() const {
-		return this->vReproIndex;
-	}
-
-public://vetters
-
-	inline auto fVetAlive(bool vAliveValue = 1) const {
-		return (this->vAliveValue == vAliveValue);
-	}
-
-private://datadef
-
-	//lifetime
-	long			 vAliveStepCount;//how many steps since birth?
-	const long vAliveStepLimit;//how many steps until death?
-	bool			 vAliveValue;		 //are we alive?
-
-	//reproduction
-	long			 vReproStepCount;//how many steps since the last reproduction?
-	const long vReproStepLimit;//how many steps until the next reproduction?
-	const long vReproIndex;		 //the current generation number
+	QTimer													vReproTimer;
+	const std::chrono::milliseconds vReproTimerPoint;//how long since birth?
+	const std::chrono::milliseconds vReproTimerLimit;//how long until repro?
+	const long											vReproIndex;//the current generation number
 };
 
 class tSimThread: public QThread {
+	Q_OBJECT
+
 public://codetor
 
 	tSimThread();
@@ -86,6 +70,22 @@ public://codetor
 public://actions
 
 	void run() override;
+
+public://getters
+
+  const QVector<tSimBeing> &fStartRead() {
+		return this->vBeingArrayWas;
+	}
+	const QVector<tSimBeing> &fGiveBeingArray() {
+		return this->vBeingArrayWas;
+	}
+
+public://datadef
+
+	QVector<tSimBeing> vBeingArrayWas;
+	QVector<tSimBeing> vBeingArrayNow;
+
+	QMutex vMutex;
 };
 
 //}
@@ -105,7 +105,7 @@ public://codetor
 
 public://actions
 
-	void fRunSim(int vSimBeing1stCount);
+	void fRunSim(unsigned vSimBeing1stCount);
 
 	void fRunEventKeyPress(QKeyEvent *vQKeyEvent);
 
@@ -113,18 +113,12 @@ signals:
 
 	void sRunSimCall();
 
-public://setters
-
-	void fAddSimStep();
-
 public://datadef
 
 	std::unique_ptr<tAppWindow> vWindow;
 
-	int vSimStepIndex;
-	int vSimBeing1stCount;
-
-	QVector<tSimBeing> vSimBeingArray;
+	unsigned						vSimThread1stCount;
+	QVector<tSimThread> vSimThreadArray;
 };
 
 /* application window:
@@ -169,8 +163,8 @@ public slots:
 
 public://consdef
 
-	static constexpr auto vSimBeingMinCount = 1;
-	static constexpr auto vSimBeingMaxCount = 20;
+	static constexpr auto vSimThreadMinCount = 1;
+	static constexpr auto vSimThreadMaxCount = 20;
 
 public://datadef
 

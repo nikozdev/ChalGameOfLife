@@ -17,12 +17,15 @@
 #include <string_view>
 
 #include <random>
+namespace {
+	inline static std::random_device vRandomDev;
+	inline static std::mt19937			 vRandomGen(vRandomDev());
+}
 
-inline static std::random_device vRandomDev;
-inline static std::mt19937			 vRandomGen(vRandomDev());
-
-#include <thread>
-#include <future>
+#include <chrono>
+namespace {
+	using namespace std::literals::chrono_literals;
+}
 
 #include <iostream>
 

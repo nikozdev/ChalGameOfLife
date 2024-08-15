@@ -17,68 +17,60 @@ void fAddGuiHorLine(auto vParent, auto &vLayout) {
 
 //codetor
 
-tSimBeing::tSimBeing(std::optional<tSimBeing> vAncestor)
-	: vAliveStepCount()
-	, vAliveStepLimit(
-			vAncestor ? vAncestor->vAliveStepLimit
-								: std::uniform_int_distribution<>(2, 8)(vRandomGen)
-		)
-	, vAliveValue(1)
-	, vReproStepCount()
-	, vReproStepLimit(
-			vAncestor ? vAncestor->vReproStepLimit
-								: std::uniform_int_distribution<>(1, 4)(vRandomGen)
-		)
-	, vReproIndex(vAncestor ? (vAncestor->vReproIndex + 1) : 0) {
+tSimBeing::tSimBeing(tSimBeing *vAncestor)
+	: QObject(nullptr)
+	, vAliveTimer{}
+	, vAliveTimerLimit{vAncestor ? vAncestor->vAliveTimerLimit : std::chrono::milliseconds(vAliveTimerLimitRange(vRandomGen))}
+	, vReproTimer{}
+	, vReproTimerLimit{vAncestor ? vAncestor->vReproTimerLimit : std::chrono::milliseconds(vAliveTimerLimitRange(vRandomGen))}
+	, vReproIndex{vAncestor ? vAncestor->vReproIndex + 1 : 0} {
+	connect(&this->vAliveTimer, &QTimer::timeout, this, &tSimBeing::fTryDeath);
+	connect(&this->vReproTimer, &QTimer::timeout, this, &tSimBeing::fTryRepro);
+}
+
+tSimBeing::~tSimBeing() {
+	this->vAliveTimer.stop();
+	this->vReproTimer.stop();
 }
 
 //actions
 
-std::optional<tSimBeing> tSimBeing::fRunStep() {
-	if(this->fVetAlive(0)) {
-		fLogErr("fRunStep", "Running step for a dead organism!");
-	}
-	std::optional<tSimBeing> vChild;
-	if(this->vReproStepCount < this->vReproStepLimit) {
-		this->vReproStepCount += 1;
-	} else {
-		//vChild.emplace(this->fTryRepro());
-	}
-	if(this->vAliveStepCount < this->vAliveStepLimit) {
-		this->vAliveStepCount += 1;
-	} else {
-		this->fTryDeath();
-	}
-	//return vChild;
-  return {};
+void tSimBeing::fRun()
+{
+	this->vReproTimer.setInterval(this->vReproTimerLimit);
+	this->vReproTimer.start();
+	this->vAliveTimer.setInterval(this->vAliveTimerLimit);
+	this->vAliveTimer.start();
 }
 
-bool tSimBeing::fTryAntibio() {
-	if(this->fVetAlive(0)) {
-		fLogErr("fTryAntibio", "Trying antibio on a dead organism!");
-	}
-	auto vAntibioSurviveChance = std::
-		uniform_int_distribution<>(1, vAntibioKillingChance)(vRandomGen);
-	if(vAntibioSurviveChance > this->vAntibioSurviveChance) {
-		return this->fTryDeath();
-	} else {
-		return 0;
-	}
+//slots
+
+void tSimBeing::fTryRepro() {
+	emit this->sTryReproCall(new tSimBeing(this));
 }
 
-bool tSimBeing::fTryDeath() {
-	if(this->fVetAlive(0)) {
-		fLogErr("fTryDeath", "Trying death on a dead organism!");
-	}
-	this->vAliveValue = 0;
-	return 1;
+void tSimBeing::fTryDeath() {
+	emit this->sTryDeathCall(this);
 }
 
-std::optional<tSimBeing> tSimBeing::fTryRepro() {
-	if(this->fVetAlive(0)) {
-		fLogErr("fTryRepro", "Trying repro on a dead organism!");
+///}
+
+///{
+
+//codetor
+
+tSimThread::tSimThread(): QThread(nullptr), vBeingArray{} {
+}
+
+//actions
+
+void tSimThread::run() {
+  this->vBeingArray.push_back(tSimBeing());
+  for(auto&vSimBeing) {
+  }
+  while(this->vBeingArray.size()) {
+    QMutexLocker vLocker(&this->vMutex);
 	}
-	return tSimBeing(*this);
 }
 
 ///}
@@ -92,7 +84,10 @@ std::optional<tSimBeing> tSimBeing::fTryRepro() {
 //codetor
 
 tApp::tApp(int vArgC, char **vArgV)
-	: QApplication(vArgC, vArgV), vWindow{new tAppWindow()}, vSimStepIndex(0) {
+	: QApplication(vArgC, vArgV)
+	, vWindow{new tAppWindow()}
+	, vSimThread1stCount(0)
+	, vSimThreadArray{} {
 	this->setStyleSheet(
 		"QWidget {"
 		" background: black;"
@@ -107,12 +102,14 @@ tApp::tApp(int vArgC, char **vArgV)
 
 //actions
 
-void tApp::fRunSim(int vSimBeing1stCount) {
-	if(this->vSimBeing1stCount) {
+void tApp::fRunSim(unsigned vSimThread1stCount) {
+	if(this->vSimThread1stCount) {
 		fLogErr("fRunSim Error", "Cannot set simulation twice!");
 	}
-	this->vSimBeing1stCount = vSimBeing1stCount;
-	this->vSimBeingArray		= QVector<tSimBeing>(vSimBeing1stCount);
+	this->vSimThread1stCount = vSimThread1stCount;
+
+	this->vSimThreadArray.resize(vSimThread1stCount);
+
 	emit this->sRunSimCall();
 }
 
@@ -122,13 +119,8 @@ void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
 	auto vQKeyValue = vQKeyBytes[0];
 	switch(vQKeyValue) {
 	case 'a': {
-		auto vTotalCount = this->vSimBeingArray.size();
+		auto vTotalCount = this->vSimThreadArray.size();
 		auto vAliveCount = 0;
-		for(auto vIndex = 0; vIndex < vTotalCount; vIndex++) {
-			auto &vEntry = this->vSimBeingArray[vIndex];
-			vEntry.fTryAntibio();
-			vAliveCount += vEntry.fVetAlive(1);
-		}
 		this->vWindow->vSimWindow->vOutput->setText(
 			fmt::format(
 				"[{}]: "
@@ -137,22 +129,6 @@ void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
 				vQKeyValue,
 				vAliveCount,
 				vTotalCount
-			)
-				.c_str()
-		);
-	} break;
-	case 's': {
-		auto vSimStepWas = this->vSimStepIndex;
-		this->fAddSimStep();
-		auto vSimStepNow = this->vSimStepIndex;
-		this->vWindow->vSimWindow->vOutput->setText(
-			fmt::format(
-				"[{}]: "
-				"Taking 1 more step of simulation\n"
-				"(from {} to {});",
-				vQKeyValue,
-				vSimStepWas,
-				vSimStepNow
 			)
 				.c_str()
 		);
@@ -177,12 +153,6 @@ void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
 	}
 }
 
-//setters
-
-void tApp::fAddSimStep() {
-	this->vSimStepIndex++;
-}
-
 ///}
 
 ///{
@@ -203,12 +173,12 @@ tAppWindow::tAppWindow(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 		this->vStack->addWidget(this->vSimWindow.get());
 
 		this->vStack->setCurrentIndex(0);
-			connect(
-				static_cast<tApp *>(QApplication::instance()),
-				&tApp::sRunSimCall,
-				this,
-				&tAppWindow::sRunSimSlot
-			);
+		connect(
+			static_cast<tApp *>(QApplication::instance()),
+			&tApp::sRunSimCall,
+			this,
+			&tAppWindow::sRunSimSlot
+		);
 	}
 	{//Fonts
 
@@ -287,13 +257,13 @@ void t1stWindow::fRunSimConfig() {
 		"Starting Simulation",
 		fmt::format(
 			"Enter the number of micro-organisms from {} to {}.",
-			this->vSimBeingMinCount,
-			this->vSimBeingMaxCount
+			this->vSimThreadMinCount,
+			this->vSimThreadMaxCount
 		)
 			.c_str(),
 		0,
-		this->vSimBeingMinCount,
-		this->vSimBeingMaxCount,
+		this->vSimThreadMinCount,
+		this->vSimThreadMaxCount,
 		1,
 		&vInputFlag
 	);
@@ -320,7 +290,6 @@ tSimWindow::tSimWindow(tAppWindow *vAppWindow)
 	this->vPrompt->setReadOnly(1);
 	this->vPrompt->setText(
 		"Hit one of the keys:"
-		"\n- 's' to add 1 step to the simulation progress;"
 		"\n- 'a' to use antibiotics;"
 		"\n- 'q' to quit;"
 	);
@@ -375,6 +344,14 @@ tSimReportScroll::tSimReportScroll(tSimReport *vSimReport)
 //slots
 
 void tSimReportScroll::sRunSimSlot() {
+	auto				vApp	 = static_cast<tApp *>(QObject::sender());
+	const auto &vArray = vApp->vSimThreadArray;
+	const auto	vCount = vArray.size();
+	for(auto vIndex = 0; vIndex < vCount; vIndex++) {
+		auto vMessg = fmt::format("[{}/{}] is alive", vIndex, vCount);
+		auto vLabel = new QLabel(vMessg.c_str(), this);
+		this->vLayout->addWidget(vLabel, 1);
+	}
 }
 
 ///}
