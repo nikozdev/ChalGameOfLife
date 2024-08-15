@@ -2,7 +2,7 @@
 
 namespace {//util
 
-	void fAddGuiHorLine(auto vParent, auto vLayout) {
+	void fAddGuiHorLine(auto vParent, auto &vLayout) {
 		auto vHSep = new QFrame(vParent);
 		vLayout->addWidget(vHSep, 1);
 		vHSep->setFrameShape(QFrame::HLine);
@@ -36,7 +36,7 @@ namespace {//simulation
 
 	std::optional<tSimBeing> tSimBeing::fRunStep() {
 		if(this->fVetAlive(0)) {
-			throw std::runtime_error("running step for a dead organism");
+			fLogErr("fRunStep", "Running step for a dead organism!");
 		}
 		std::optional<tSimBeing> vChild;
 		if(this->vReproStepCount < this->vReproStepLimit) {
@@ -54,7 +54,7 @@ namespace {//simulation
 
 	bool tSimBeing::fTryAntibio() {
 		if(this->fVetAlive(0)) {
-			throw std::runtime_error("trying antibio on a dead organism");
+			fLogErr("fTryAntibio", "Trying antibio on a dead organism!");
 		}
 		auto vAntibioSurviveChance = std::
 			uniform_int_distribution<>(1, vAntibioKillingChance)(vRandomGen);
@@ -67,7 +67,7 @@ namespace {//simulation
 
 	bool tSimBeing::fTryDeath() {
 		if(this->fVetAlive(0)) {
-			throw std::runtime_error("trying death on a dead SimBeing");
+			fLogErr("fTryDeath", "Trying death on a dead organism!");
 		}
 		this->vAliveValue = 0;
 		return 1;
@@ -75,7 +75,7 @@ namespace {//simulation
 
 	std::optional<tSimBeing> tSimBeing::fTryRepro() {
 		if(this->fVetAlive(0)) {
-			throw std::runtime_error("trying death on a dead organism");
+			fLogErr("fTryRepro", "Trying repro on a dead organism!");
 		}
 		return tSimBeing(*this);
 	}
@@ -91,9 +91,7 @@ namespace {//system
 	///codetor
 
 	tApp::tApp(int vArgC, char **vArgV)
-		: QApplication(vArgC, vArgV)
-		, vWindow{std::make_shared<tAppWindow>()}
-		, vSimStepIndex(0) {
+		: QApplication(vArgC, vArgV), vWindow{new tAppWindow()}, vSimStepIndex(0) {
 		this->setStyleSheet(
 			"QWidget {"
 			" background: black;"
@@ -110,7 +108,7 @@ namespace {//system
 
 	void tApp::fRunSim(int vSimBeing1stCount) {
 		if(this->vSimBeing1stCount) {
-			throw std::runtime_error("Cannot set simulation twice!");
+			fLogErr("fRunSim Error", "Cannot set simulation twice!");
 		}
 		this->vSimBeing1stCount = vSimBeing1stCount;
 		this->vSimBeingArray		= QVector<tSimBeing>(vSimBeing1stCount);
@@ -171,7 +169,9 @@ namespace {//system
 				)
 					.c_str()
 			);
+			fLogErr("TryKeyPress", "Quit is being done;");
 			this->quit();
+			fLogErr("TryKeyPress", "Quit has been done;");
 		} break;
 		default: {
 			this->vWindow->vSimWindow->vOutput
@@ -188,9 +188,9 @@ namespace {//system
 
 	tAppWindow::tAppWindow(QWidget *vParentPtr, Qt::WindowFlags vFlags)
 		: QMainWindow(vParentPtr, vFlags)
-		, v1stWindow{std::make_shared<t1stWindow>(this)}
-		, vSimWindow{std::make_shared<tSimWindow>(this)}
-		, vStack{std::make_shared<QStackedWidget>(this)} {
+		, v1stWindow{new t1stWindow(this)}
+		, vSimWindow{new tSimWindow(this)}
+		, vStack{new QStackedWidget(this)} {
 		fLogErr("AppWindow", "ctor");
 		if constexpr(1) {//Stack
 
@@ -245,9 +245,9 @@ namespace {//system
 
 	t1stWindow::t1stWindow(tAppWindow *vAppWindow)
 		: QWidget(vAppWindow)
-		, vLayout{std::make_shared<QVBoxLayout>(this)}
-		, vPrompt{std::make_shared<QTextEdit>("start prompt", this)}
-		, vButton{std::make_shared<QPushButton>("start", this)} {
+		, vLayout{new QVBoxLayout(this)}
+		, vPrompt{new QTextEdit("start prompt", this)}
+		, vButton{new QPushButton("start", this)} {
 		fLogErr("1stWindow", "ctor");
 		this->setLayout(this->vLayout.get());
 
@@ -300,10 +300,10 @@ namespace {//system
 
 	tSimWindow::tSimWindow(tAppWindow *vAppWindow)
 		: QWidget(vAppWindow)
-		, vLayout{std::make_shared<QVBoxLayout>(this)}
-		, vPrompt{std::make_shared<QTextEdit>("key prompt", this)}
-		, vOutput{std::make_shared<QTextEdit>("key output", this)}
-		, vReport{std::make_shared<tSimReport>(this)} {
+		, vLayout{new QVBoxLayout(this)}
+		, vPrompt{new QTextEdit("key prompt", this)}
+		, vOutput{new QTextEdit("key output", this)}
+		, vReport{new tSimReport(this)} {
 		fLogErr("SimWindow", "ctor");
 		this->setLayout(this->vLayout.get());
 
@@ -340,9 +340,9 @@ namespace {//system
 
 	tSimReport::tSimReport(tSimWindow *vSimWindow)
 		: QWidget(vSimWindow)
-		, vLayout{std::make_shared<QVBoxLayout>(this)}
-		, vStatus{std::make_shared<QTextEdit>(this)}
-		, vScroll{std::make_shared<tSimReportScroll>(this)} {
+		, vLayout{new QVBoxLayout(this)}
+		, vStatus{new QTextEdit(this)}
+		, vScroll{new tSimReportScroll(this)} {
 		fLogErr("SimReport", "ctor");
 		this->vLayout->addWidget(this->vStatus.get(), 1);
 		this->vStatus->setReadOnly(1);
@@ -358,14 +358,9 @@ namespace {//system
 	//codetor
 
 	tSimReportScroll::tSimReportScroll(tSimReport *vSimReport)
-		: QScrollArea(vSimReport), vLayout{std::make_shared<QVBoxLayout>(this)} {
+		: QScrollArea(vSimReport), vLayout{new QVBoxLayout(this)} {
 		fLogErr("SimReportScroll", "ctor");
 		this->setLayout(this->vLayout.get());
-		for(auto vSimBeingIndex = 0; vSimBeingIndex < 20; vSimBeingIndex++) {
-			auto vSimBeingOrder = vSimBeingIndex + 1;
-			auto vSimBeingLabel = fmt::format("[{}]", vSimBeingOrder);
-			this->vLayout->addWidget(new QLabel(vSimBeingLabel.c_str(), this));
-		}
 	}
 
 	//}

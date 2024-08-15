@@ -113,7 +113,7 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<tAppWindow> vWindow;
+		std::unique_ptr<tAppWindow> vWindow;
 
 		int vSimStepIndex;
     int vSimBeing1stCount;
@@ -139,10 +139,10 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<t1stWindow> v1stWindow;
-		std::shared_ptr<tSimWindow> vSimWindow;
+		std::unique_ptr<t1stWindow> v1stWindow;
+		std::unique_ptr<tSimWindow> vSimWindow;
 
-		std::shared_ptr<QStackedWidget> vStack;
+		std::unique_ptr<QStackedWidget> vStack;
 	};
 
 	/* 1st window
@@ -164,10 +164,10 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<QVBoxLayout> vLayout;
+		std::unique_ptr<QVBoxLayout> vLayout;
 
-		std::shared_ptr<QTextEdit>	 vPrompt;
-		std::shared_ptr<QPushButton> vButton;
+		std::unique_ptr<QTextEdit>	 vPrompt;
+		std::unique_ptr<QPushButton> vButton;
 	};
 
 	/* simulation window
@@ -184,12 +184,12 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<QVBoxLayout> vLayout;
+		std::unique_ptr<QVBoxLayout> vLayout;
 
-		std::shared_ptr<QTextEdit> vPrompt;
-		std::shared_ptr<QTextEdit> vOutput;
+		std::unique_ptr<QTextEdit> vPrompt;
+		std::unique_ptr<QTextEdit> vOutput;
 
-		std::shared_ptr<tSimReport> vReport;
+		std::unique_ptr<tSimReport> vReport;
 
 		/* window to monitor states of all organisms
 		 */
@@ -207,9 +207,9 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<QVBoxLayout>			vLayout;
-		std::shared_ptr<QTextEdit>				vStatus;
-		std::shared_ptr<tSimReportScroll> vScroll;
+		std::unique_ptr<QVBoxLayout>			vLayout;
+		std::unique_ptr<QTextEdit>				vStatus;
+		std::unique_ptr<tSimReportScroll> vScroll;
 	};
 
 	/* simulation report scroll
@@ -221,7 +221,7 @@ namespace {//system
 
 	public://datadef
 
-		std::shared_ptr<QVBoxLayout> vLayout;
+		std::unique_ptr<QVBoxLayout> vLayout;
 	};
 
 }
