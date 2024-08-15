@@ -36,14 +36,14 @@ inline static std::mt19937			 vRandomGen(vRandomDev());
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
-#define fLog(vStream, vHeader, vString, ...)                \
-	({                                                        \
-		fmt::println(                                           \
-			vStream,                                              \
-			"[{Header}]=(\n{String}\n)=[{Header}]",               \
-			fmt::arg("Header", vHeader),                          \
-			fmt::arg("String", fmt::format(vString, __VA_ARGS__)) \
-		);                                                      \
+#define fLog(vStream, vHeader, vString, ...)                  \
+	({                                                          \
+		fmt::println(                                             \
+			vStream,                                                \
+			"[{Header}]=(\n{String}\n)=[{Header}]",                 \
+			fmt::arg("Header", vHeader),                            \
+			fmt::arg("String", fmt::format(vString, ##__VA_ARGS__)) \
+		);                                                        \
 	})//fLog
 #define fLogOut(...) ({ fLog(stdout, __VA_ARGS__); })
 #define fLogErr(...) ({ fLog(stderr, __VA_ARGS__); })
@@ -53,6 +53,5 @@ inline static std::mt19937			 vRandomGen(vRandomDev());
 #include <QtCore>
 #include <QtGlobal>
 #include <QtWidgets>
-
 
 #endif//dChalGameOfLife_top_hpp
