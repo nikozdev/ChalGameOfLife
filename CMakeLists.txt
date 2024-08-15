@@ -34,7 +34,6 @@ target_sources(${vExeName} PRIVATE ${vSrcPathArray})
 target_compile_definitions(${vExeName} PRIVATE
   dProjName="${vProjName}"
   dProjPath="${vProjPath}"
-  dUnitCount=0x10
   QT_DISABLE_DEPRECATED_UP_TO=0x050f00
   ) # target_compile_definitions
 target_precompile_headers(${vExeName} PRIVATE ./src/top.hpp)
