@@ -53,7 +53,7 @@ namespace {//simulation
 			return (this->vAliveValue == vAliveValue);
 		}
 
-	public://actions
+	public slots:
 
 		std::optional<tSimBeing> fRunStep();
 
@@ -65,7 +65,7 @@ namespace {//simulation
 
 		std::optional<tSimBeing> fTryRepro();
 
-	private://vardefs
+	private://datadef
 
 		//lifetime
 		long			 vAliveStepCount;//how many steps since birth?
@@ -76,85 +76,156 @@ namespace {//simulation
 		long			 vReproStepCount;//how many steps since the last reproduction?
 		const long vReproStepLimit;//how many steps until the next reproduction?
 		const long vReproIndex;		 //the current generation number
+	};
 
-	};//tSimBeing
+	class tSimThread: public QThread {
+	public://codetor
 
-}//simulation
+		tSimThread();
+
+	public://actions
+
+		void run() override;
+	};
+
+}
 
 namespace {//system
 
 	/* application giga-class
-	 * - creates and holds tWin instance
+	 * - creates and holds tAppWindow instance
 	 */
-	class tWin;
+	class tAppWindow;
 	class tApp: public QApplication {
-	public:
+	public://codetor
 
 		tApp(int vArgC, char **vArgV);
 
-		bool fTryEventKeyPress(QKeyEvent *vQKeyEvent);
+	public://actions
 
-	private:
+    void fRunSim(int vSimBeing1stCount);
 
-		std::shared_ptr<tWin> vWin;
+		void fRunEventKeyPress(QKeyEvent *vQKeyEvent);
+
+	public://setters
+
+		void fAddSimStep();
+
+	public://datadef
+
+		std::shared_ptr<tAppWindow> vWindow;
 
 		int vSimStepIndex;
+    int vSimBeing1stCount;
 
-		QList<tSimBeing> vSimBeingArray;
+		QVector<tSimBeing> vSimBeingArray;
+	};
 
-	};//tApp
-
-	/* window of application
-	 * - creates and holds tSimBeingReport
+	/* application window:
+	 * creates and holds tSimBeingReport;
 	 */
-	class tSimBeingReport;
-	class tWin: public QWidget {
+	class t1stWindow;
+	class tSimWindow;
+	class tAppWindow: public QMainWindow {
 	public://codetor
 
-		tWin(
-			QWidget *vParentPtr = nullptr, Qt::WindowFlags vFlags = Qt::WindowFlags()
+		tAppWindow(
+			QWidget *vParent = nullptr, Qt::WindowFlags vFlags = Qt::WindowFlags()
 		);
+
+	public slots:
+
+		void fSetSimWindow();
+
+	public://datadef
+
+		std::shared_ptr<t1stWindow> v1stWindow;
+		std::shared_ptr<tSimWindow> vSimWindow;
+
+		std::shared_ptr<QStackedWidget> vStack;
+	};
+
+	/* 1st window
+	 * prompt users to input a number of simulation beings;
+	 */
+	class t1stWindow: public QWidget {
+	public://codetor
+
+		t1stWindow(tAppWindow *vAppWindow);
+
+	public slots:
+
+		void fRunSimConfig();
+
+	public://consdef
+
+		static constexpr auto vSimBeingMinCount = 1;
+		static constexpr auto vSimBeingMaxCount = 20;
+
+	public://datadef
+
+		std::shared_ptr<QVBoxLayout> vLayout;
+
+		std::shared_ptr<QTextEdit>	 vPrompt;
+		std::shared_ptr<QPushButton> vButton;
+	};
+
+	/* simulation window
+	 */
+	class tSimReport;
+	class tSimWindow: public QWidget {
+	public://codetor
+
+		tSimWindow(tAppWindow *vAppWindow);
 
 	public://actions
 
 		void keyPressEvent(QKeyEvent *vQKeyEvent) override;
 
-	public://getters
-
-		auto fGetKeyOutput() {
-			return this->vKeyOutput;
-		}
-
-	private://vardefs
+	public://datadef
 
 		std::shared_ptr<QVBoxLayout> vLayout;
 
-		std::shared_ptr<QTextEdit> vKeyPrompt;
-		std::shared_ptr<QTextEdit> vKeyOutput;
+		std::shared_ptr<QTextEdit> vPrompt;
+		std::shared_ptr<QTextEdit> vOutput;
 
-		std::shared_ptr<QTextEdit>			 vSimStateReport;
-		std::shared_ptr<tSimBeingReport> vSimBeingReport;
+		std::shared_ptr<tSimReport> vReport;
 
-	};//tWin
+		/* window to monitor states of all organisms
+		 */
+	};
 
-	/* window to monitor states of all organisms
+	/* simulation report
+	 * display information about the simulation
+	 * hold scrolling area for simulation beings
 	 */
-	class tSimBeingReport: public QScrollArea {
-	public:
+	class tSimReportScroll;
+	class tSimReport: public QWidget {
+	public://codetor
 
-		tSimBeingReport(QWidget *vParentPtr);
+		tSimReport(tSimWindow *vSimWindow);
 
-		void fAddWidget(QWidget *vWidgetPtr);
+	public://datadef
 
-	private:
+		std::shared_ptr<QVBoxLayout>			vLayout;
+		std::shared_ptr<QTextEdit>				vStatus;
+		std::shared_ptr<tSimReportScroll> vScroll;
+	};
+
+	/* simulation report scroll
+	 */
+	class tSimReportScroll: public QScrollArea {
+	public://codetor
+
+		tSimReportScroll(tSimReport *vSimReport);
+
+	public://datadef
 
 		std::shared_ptr<QVBoxLayout> vLayout;
+	};
 
-	};//tSimBeingReport
+}
 
-}//system
-
-//entry point
 extern int main(int vArgC, char **vArgV);
 
 #endif//dChalGameOfLife_exe_hpp
