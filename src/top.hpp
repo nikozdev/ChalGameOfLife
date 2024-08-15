@@ -1,7 +1,7 @@
 #ifndef dChalGameOfLife_top_hpp
 #define dChalGameOfLife_top_hpp
 
-/* std */
+//std
 
 #include <cstdlib>
 #include <cstdio>
@@ -9,11 +9,6 @@
 #include <memory>
 
 #include <algorithm>
-#include <array>
-#include <vector>
-#include <initializer_list>
-#include <map>
-#include <unordered_map>
 
 #include <optional>
 #include <functional>
@@ -22,10 +17,9 @@
 #include <string_view>
 
 #include <random>
-namespace nExe {
+
 inline static std::random_device vRandomDev;
 inline static std::mt19937			 vRandomGen(vRandomDev());
-}//namespace nExe
 
 #include <thread>
 #include <future>
@@ -36,7 +30,7 @@ inline static std::mt19937			 vRandomGen(vRandomDev());
 
 #include <exception>
 
-/* fmt */
+//fmt
 
 #include <fmt/format.h>
 #include <fmt/core.h>
@@ -54,9 +48,11 @@ inline static std::mt19937			 vRandomGen(vRandomDev());
 #define fLogOut(...) ({ fLog(stdout, __VA_ARGS__); })
 #define fLogErr(...) ({ fLog(stderr, __VA_ARGS__); })
 
-/* qt6 */
+//qt6
 
+#include <QtCore>
 #include <QtGlobal>
 #include <QtWidgets>
+
 
 #endif//dChalGameOfLife_top_hpp
