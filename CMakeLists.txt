@@ -64,4 +64,5 @@ function(fAddPackage vPackName vCompName vLinkName vRepoUrl vRepoTag)
 endfunction(fAddPackage)
 
 fAddPackage("fmt" "" "fmt::fmt" "https://github.com/fmtlib/fmt.git" "11.0.2")
+fAddPackage("Qt6" "Core" "Qt6::Core" "https://code.qt.io/qt/qt5.git" "v6.7.2")
 fAddPackage("Qt6" "Widgets" "Qt6::Widgets" "https://code.qt.io/qt/qt5.git" "v6.7.2")
