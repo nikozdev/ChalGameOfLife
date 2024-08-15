@@ -72,7 +72,7 @@ ReferenceAlignment:     Right
 EmptyLineAfterAccessModifier: Always # public:\n<content>
 EmptyLineBeforeAccessModifier: Always # \npublic:
 ExperimentalAutoDetectBinPacking: false #
-FixNamespaceComments: true # namespace a {} // namespace a
+FixNamespaceComments: false # namespace a {} // namespace a
 IncludeBlocks:     Preserve # include <...> grouping by lines
 IncludeCategories: # priority is INT_MAX by defualt, to go into the end
   - Regex:         '.*'
@@ -108,7 +108,7 @@ LambdaBodyIndentation: Signature # call(\n\t[](){})
 MacroBlockBegin: ''
 MacroBlockEnd:   ''
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: None # None, Inner, All
+NamespaceIndentation: All # None, Inner, All
 PackConstructorInitializers: NextLine
 PenaltyBreakAssignment:               1024
 PenaltyBreakBeforeFirstCallParameter: 1024
