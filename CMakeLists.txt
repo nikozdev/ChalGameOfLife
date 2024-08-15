@@ -19,6 +19,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 set(vProjPath "${CMAKE_SOURCE_DIR}")
 file(GLOB vSrcPathArray "src/*.cpp")
+file(GLOB vHdrPathArray "src/*.hpp")
 
 # make
 
@@ -30,7 +31,6 @@ set(vExeName p${vProjName}.exe)
 set(vExePath ${CMAKE_BINARY_DIR}/${vExeName}.exe)
 
 add_executable(${vExeName})
-target_sources(${vExeName} PRIVATE ${vSrcPathArray})
 target_compile_definitions(${vExeName} PRIVATE
   dProjName="${vProjName}"
   dProjPath="${vProjPath}"
@@ -41,7 +41,7 @@ target_compile_options(${vExeName} PRIVATE
   "-fpermissive"
   ) # target_compile_options
 
-## libs
+## lib
 
 include(FetchContent)
 
@@ -65,3 +65,10 @@ endfunction(fAddPackage)
 fAddPackage("fmt" "" "fmt::fmt" "https://github.com/fmtlib/fmt.git" "11.0.2")
 fAddPackage("Qt6" "Core" "Qt6::Core" "https://code.qt.io/qt/qt5.git" "v6.7.2")
 fAddPackage("Qt6" "Widgets" "Qt6::Widgets" "https://code.qt.io/qt/qt5.git" "v6.7.2")
+
+## src
+
+find_package(Qt6 REQUIRED)
+qt6_wrap_cpp(vQt6MocPathArray ${vHdrPathArray})
+message(STATUS "vQt6MocPathArray=${vQt6MocPathArray}")
+target_sources(${vExeName} PRIVATE ${vSrcPathArray} ${vQt6MocPathArray})
