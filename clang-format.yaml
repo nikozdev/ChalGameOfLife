@@ -72,7 +72,7 @@ ReferenceAlignment:     Right
 EmptyLineAfterAccessModifier: Always # public:\n<content>
 EmptyLineBeforeAccessModifier: Always # \npublic:
 ExperimentalAutoDetectBinPacking: false #
-FixNamespaceComments: false # namespace a {} // namespace a
+FixNamespaceComments: true # namespace a {} // namespace a
 IncludeBlocks:     Preserve # include <...> grouping by lines
 IncludeCategories: # priority is INT_MAX by defualt, to go into the end
   - Regex:         '.*'
