@@ -2,41 +2,41 @@
 
 challenge: the game of life;
 
-# requirement
+## Требования
 
-- use Qt framework (versions 5 or 6)
-- be multithreaded
+- использование фреймворка Qt (5 или 6)
+- многопоточность
 
-## design
+## Задача
 
-this is a simulation of micro-organisms (units);
+Необходимо сделать симуляцию микро-огранизмов;
 
-the start: define the amount of units from 1 to 20;
+В начале программы требуется определить количество микро-организмов;
 
-each unit:
-- has own properties: lifetime and "fertile frequency";
-- lives in a separate thread (the main thread has to be independent);
-- reproduces itself after it's fertile frequency, inheriting the temporary parent properties;
-- dies after it's lifetime;
+Каждый организм:
+- Имеет 2 временнЫх свойства: "время жизни", "частота размножения";
+- Живет в отдельном потоке исполнения;
+- Размножается, создавая новый организм со своими временнЫми свойствами;
+- Умирает по истечении своего "срока";
 
-the main thread:
-- allows using anti-biotics to kill a random amount of units;
-- renders everything in runtime
-- outputs the statistics about each unit
+Главный поток:
+- Разрешает использование "антибиотика"
+> Это действие убивает случайное количество микро-организмов;
+- Отрисовывает статистику по каждому микро-организму в реальном времени
 
-visible statistics:
-- how long until death;
-- how long until breed;
+Статистика по каждому микро-организму:
+- Время до смерти;
+- Время до размножения;
 
-## build
+## Сборка Проекта
 
-the only way to build this project is by using cmake:
+Единственный поддерживаемый способ построения проекта: использование "cmake":
 ```sh
 cmake -B build
 cmake --build build
 ./build/pChalGameOfLife.exe
 ```
-should work just fine for all platforms;
+Должно сработать на любой операционной системе;
 
-note that qt6 must be installed on the system;
-> otherwise cmake is gonna be fetching qt6 from github for hours;
+Обратите внимание, что на системе должен быть установлен фреймворк Qt 6й версии;
+> Иначе cmake будет грузить его с github целую вечность;
