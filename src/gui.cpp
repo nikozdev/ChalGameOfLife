@@ -33,12 +33,14 @@ namespace nGui {
 			this->vStack->addWidget(this->vSimWindow);
 
 			this->vStack->setCurrentIndex(0);
+      this->v1stWindow->setFocus();
 			connect(
 				static_cast<nApp::tApp *>(QApplication::instance()),
 				&nApp::tApp::sRunSimCall,
 				this,
 				[this]() {
 					this->vStack->setCurrentIndex(1);
+          this->vSimWindow->setFocus();
 				}
 			);
 		}
@@ -176,8 +178,8 @@ namespace nGui {
 		, vLayout{new QVBoxLayout(this)}
 		, vStatus{new QTextEdit(this)}
 		, vScroll{new tSimReportScroll(this)} {
-		this->vLayout->addWidget(this->vStatus, 1);
-		this->vStatus->setReadOnly(1);
+		//this->vLayout->addWidget(this->vStatus, 1);
+		//this->vStatus->setReadOnly(1);
 
 		nUtil::fAddGuiHorLine(this, this->vLayout);
 		this->vLayout->addWidget(this->vScroll, 4);
