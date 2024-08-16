@@ -17,59 +17,70 @@ void fAddGuiHorLine(auto vParent, auto &vLayout) {
 
 //codetor
 
-tSimBeing::tSimBeing(tSimBeing *vAncestor)
-	: QObject(nullptr)
-	, vAliveTimer{}
-	, vAliveTimerLimit{vAncestor ? vAncestor->vAliveTimerLimit : std::chrono::milliseconds(vAliveTimerLimitRange(vRandomGen))}
-	, vReproTimer{}
-	, vReproTimerLimit{vAncestor ? vAncestor->vReproTimerLimit : std::chrono::milliseconds(vAliveTimerLimitRange(vRandomGen))}
-	, vReproIndex{vAncestor ? vAncestor->vReproIndex + 1 : 0} {
-	connect(&this->vAliveTimer, &QTimer::timeout, this, &tSimBeing::fTryDeath);
-	connect(&this->vReproTimer, &QTimer::timeout, this, &tSimBeing::fTryRepro);
-}
-
-tSimBeing::~tSimBeing() {
-	this->vAliveTimer.stop();
-	this->vReproTimer.stop();
-}
-
-//actions
-
-void tSimBeing::fRun()
-{
-	this->vReproTimer.setInterval(this->vReproTimerLimit);
-	this->vReproTimer.start();
-	this->vAliveTimer.setInterval(this->vAliveTimerLimit);
-	this->vAliveTimer.start();
-}
-
-//slots
-
-void tSimBeing::fTryRepro() {
-	emit this->sTryReproCall(new tSimBeing(this));
-}
-
-void tSimBeing::fTryDeath() {
-	emit this->sTryDeathCall(this);
-}
-
-///}
-
-///{
-
-//codetor
-
-tSimThread::tSimThread(): QThread(nullptr), vBeingArray{} {
+tSimThread::tSimThread(size_t vIndex)
+	: QThread(nullptr), vIndex(vIndex), vMutex(), vBeingArray{} {
 }
 
 //actions
 
 void tSimThread::run() {
-  this->vBeingArray.push_back(tSimBeing());
-  for(auto&vSimBeing) {
-  }
-  while(this->vBeingArray.size()) {
-    QMutexLocker vLocker(&this->vMutex);
+	this->vBeingArray.push_back(tSimBeing(nullptr));
+	while(this->vBeingArray.size()) {
+		this->msleep(1'000);
+		this->fRunStep();
+	}
+}
+
+void tSimThread::fRunStep() {
+	QMutexLocker vMutexLocker(&this->vMutex);
+
+	auto vBeingCount = this->vBeingArray.size();
+
+	auto vChildArray = QVector<tSimBeing>();
+	vChildArray.reserve(vBeingCount);
+
+	auto vAliveArray = QVector<tSimBeing>();
+	vAliveArray.reserve(vBeingCount);
+
+	auto vTimerPoint = std::chrono::duration_cast<
+		std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch());
+
+	for(auto &vBeingEntry: this->vBeingArray) {
+		auto vBirthTimerPoint
+			= vBeingEntry.vReproTimerSince + vBeingEntry.vReproTimerLimit;
+		if(vTimerPoint >= vBirthTimerPoint) {
+			vChildArray.push_back(tSimBeing(&vBeingEntry));
+			vBeingEntry.vReproTimerSince = vTimerPoint;
+		}
+		auto vDeathTimerPoint
+			= vBeingEntry.vAliveTimerSince + vBeingEntry.vAliveTimerLimit;
+		if(vTimerPoint <= vDeathTimerPoint) {
+			vAliveArray.push_back(vBeingEntry);
+		}
+	}
+	if(this->vBeingArray.size() != vAliveArray.size() || vChildArray.size()) {
+		this->vBeingArray.clear();
+		this->vBeingArray.reserve(vAliveArray.size() + vChildArray.size());
+
+		this->vBeingArray.append(std::move(vAliveArray));
+		this->vBeingArray.append(std::move(vChildArray));
+	}
+	emit this->sGiveUpdateCall(this->vIndex, this->vBeingArray);
+}
+
+//slots
+
+void tSimThread::sTakeAntibioSlot() {
+	QMutexLocker vMutexLocker(&this->vMutex);
+
+	auto vBeingCount = vBeingArray.size();
+	auto vAliveRange = std::uniform_int_distribution<unsigned>(0, vBeingCount);
+	auto vAliveCount = vAliveRange(vRandomGen);
+
+	if(this->vBeingArray.size() != vAliveCount) {
+		auto vBeingArray = this->vBeingArray;
+		this->vBeingArray.resize(vAliveCount);
+		emit this->sGiveUpdateCall(this->vIndex, this->vBeingArray);
 	}
 }
 
@@ -84,10 +95,7 @@ void tSimThread::run() {
 //codetor
 
 tApp::tApp(int vArgC, char **vArgV)
-	: QApplication(vArgC, vArgV)
-	, vWindow{new tAppWindow()}
-	, vSimThread1stCount(0)
-	, vSimThreadArray{} {
+	: QApplication(vArgC, vArgV), vWindow{new tAppWindow()}, vSimThreadArray{} {
 	this->setStyleSheet(
 		"QWidget {"
 		" background: black;"
@@ -102,36 +110,40 @@ tApp::tApp(int vArgC, char **vArgV)
 
 //actions
 
-void tApp::fRunSim(unsigned vSimThread1stCount) {
-	if(this->vSimThread1stCount) {
+void tApp::fRunSim(unsigned vSimThreadCount) {
+	fLogErr("fRunSim", "is being done;");
+	if(this->vSimThreadArray.size()) {
 		fLogErr("fRunSim Error", "Cannot set simulation twice!");
+		return;
 	}
-	this->vSimThread1stCount = vSimThread1stCount;
-
-	this->vSimThreadArray.resize(vSimThread1stCount);
-
+	this->vSimThreadArray.reserve(vSimThreadCount);
+	for(size_t vIndex = 0; vIndex < vSimThreadCount; vIndex++) {
+		auto vSimThread = std::make_shared<tSimThread>(vIndex);
+		this->vSimThreadArray.push_back(vSimThread);
+		connect(
+			this, &tApp::sTakeAntibioCall, vSimThread.get(), &tSimThread::sTakeAntibioSlot
+		);
+		vSimThread->start();
+	}
+	connect(this, &tApp::aboutToQuit, this, &tApp::sAboutToQuitSlot);
+	fLogErr("fRunSim", "has been done;");
 	emit this->sRunSimCall();
 }
 
 void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
 	auto vQKeyBytes = vQKeyEvent->text().toLower().toUtf8().constData();
-	fLogErr("vQKeyBytes", "{};", vQKeyBytes);
 	auto vQKeyValue = vQKeyBytes[0];
 	switch(vQKeyValue) {
 	case 'a': {
-		auto vTotalCount = this->vSimThreadArray.size();
-		auto vAliveCount = 0;
 		this->vWindow->vSimWindow->vOutput->setText(
 			fmt::format(
 				"[{}]: "
-				"Using antibiotics...\n"
-				"({}/{} left alive);",
-				vQKeyValue,
-				vAliveCount,
-				vTotalCount
+				"Using antibiotics...",
+				vQKeyValue
 			)
 				.c_str()
 		);
+		emit this->sTakeAntibioCall();
 	} break;
 	case 'q': {
 		this->vWindow->vSimWindow->vOutput->setText(
@@ -147,10 +159,22 @@ void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
 		fLogErr("TryKeyPress", "Quit has been done;");
 	} break;
 	default: {
-		this->vWindow->vSimWindow->vOutput
-			->setText(fmt::format("[{}]: Nothing to do;", vQKeyValue).c_str());
+		if(vQKeyEvent->text()[0].isLetterOrNumber()) {
+			this->vWindow->vSimWindow->vOutput
+				->setText(fmt::format("[{}]: Nothing to do;", vQKeyValue).c_str());
+		}
 	} break;
 	}
+}
+
+//slots
+
+void tApp::sAboutToQuitSlot() {
+	for(auto &vSimThread: this->vSimThreadArray) {
+		vSimThread->quit();
+		vSimThread->wait();
+	}
+	this->vSimThreadArray.clear();
 }
 
 ///}
@@ -252,7 +276,7 @@ t1stWindow::t1stWindow(tAppWindow *vAppWindow)
 
 void t1stWindow::fRunSimConfig() {
 	bool vInputFlag;
-	auto vSimBeing1stCount = QInputDialog::getInt(
+	auto vSimThreadCount = QInputDialog::getInt(
 		this,
 		"Starting Simulation",
 		fmt::format(
@@ -269,7 +293,7 @@ void t1stWindow::fRunSimConfig() {
 	);
 	if(vInputFlag) {
 		auto vApp = static_cast<tApp *>(QApplication::instance());
-		vApp->fRunSim(vSimBeing1stCount);
+		vApp->fRunSim(vSimThreadCount);
 	}
 }
 
@@ -336,21 +360,79 @@ tSimReport::tSimReport(tSimWindow *vSimWindow)
 //codetor
 
 tSimReportScroll::tSimReportScroll(tSimReport *vSimReport)
-	: QScrollArea(vSimReport), vLayout{new QVBoxLayout(this)} {
+	: QScrollArea(vSimReport), vWidget{new tSimReportScrollWidget(this)} {
 	fLogErr("SimReportScroll", "ctor");
+	this->setWidget(this->vWidget.get());
+}
+
+///}
+
+///{
+
+//codetor
+
+tSimReportScrollWidget::tSimReportScrollWidget(tSimReportScroll *vSimReportScroll
+)
+	: QWidget(vSimReportScroll), vLayout{new QVBoxLayout(this)} {
+	fLogErr("SimReportScrollWidget", "ctor");
 	this->setLayout(this->vLayout.get());
+	connect(
+		static_cast<tApp *>(QApplication::instance()),
+		&tApp::sRunSimCall,
+		this,
+		&tSimReportScrollWidget::sRunSimSlot
+	);
+}
+tSimReportScrollWidget::~tSimReportScrollWidget() {
+	this->fClean();
+}
+
+//actions
+
+void tSimReportScrollWidget::fClean() {
+	while(auto vLayoutItem = this->vLayout->takeAt(0)) {
+		delete vLayoutItem->widget();
+		delete vLayoutItem;
+	}
 }
 
 //slots
 
-void tSimReportScroll::sRunSimSlot() {
-	auto				vApp	 = static_cast<tApp *>(QObject::sender());
-	const auto &vArray = vApp->vSimThreadArray;
-	const auto	vCount = vArray.size();
-	for(auto vIndex = 0; vIndex < vCount; vIndex++) {
-		auto vMessg = fmt::format("[{}/{}] is alive", vIndex, vCount);
-		auto vLabel = new QLabel(vMessg.c_str(), this);
-		this->vLayout->addWidget(vLabel, 1);
+void tSimReportScrollWidget::sRunSimSlot() {
+	auto vApp = static_cast<tApp *>(QObject::sender());
+
+	const auto &vSimThreadArray = vApp->vSimThreadArray;
+	const auto	vSimThreadCount = vSimThreadArray.size();
+	fLogErr("RunSimSlot", "{}", vSimThreadCount);
+	for(auto vSimThreadIndex = 0; vSimThreadIndex < vSimThreadCount;
+			vSimThreadIndex++) {
+		auto &vSimThreadEntry = vSimThreadArray[vSimThreadIndex];
+		connect(
+			vSimThreadEntry.get(),
+			&tSimThread::sGiveUpdateCall,
+			this,
+			&tSimReportScrollWidget::sGiveUpdateSlot
+		);
+		auto vSimThreadOrder = vSimThreadIndex + 1;
+		auto vSimThreadTitle = fmt::
+			format("Thread {}/{}", vSimThreadOrder, vSimThreadCount);
+		this->vLayout->addWidget(new QGroupBox(vSimThreadTitle.c_str(), this), 1);
+	}
+
+	this->show();
+}
+
+//slots
+
+void tSimReportScrollWidget::sGiveUpdateSlot(
+	const size_t vSimThreadIndex, QVector<tSimBeing> vSimBeingArray
+) {
+  fLogErr("sGiveUpdateCall", "[{}] {} beings;", vSimThreadIndex, vSimBeingArray.size());
+	this->fClean();
+	for(auto vSimBeingIndex = 0; vSimBeingIndex < vSimBeingArray.size();
+			vSimBeingIndex++) {
+		this->vLayout
+			->addWidget(new QLabel(fmt::format("{}", vSimBeingIndex).c_str(), this));
 	}
 }
 

@@ -7,57 +7,46 @@
 
 /* simulation being class
  */
-class tSimBeing: public QObject {
-	Q_OBJECT
+struct tSimBeing {
+public://consdef
+
+	//limits in seconds
+	inline static auto vReproTimerLimitRange = std::uniform_int_distribution<
+		unsigned>(2, 4);
+	inline static auto vAliveTimerLimitRange = std::uniform_int_distribution<
+		unsigned>(4, 8);
 
 public://codetor
 
-	tSimBeing(tSimBeing *vAncestor = nullptr);
-	~tSimBeing();
-
-public://actions
-
-	void fRun();
-
-public slots:
-
-	void fTryRepro();
-	void fTryDeath();
-
-signals:
-
-	void sTryReproCall(tSimBeing *vSimBeing);
-	void sTryDeathCall(tSimBeing *vSimBeing);
-
-public://consdef
-
-	static constexpr auto vAntibioSurviveChance = 3;
-	static constexpr auto vAntibioKillingChance = 10;
-
-	inline static auto vReproTimerLimitRange = std::uniform_int_distribution<
-		int>(10'000, 30'000);
-	inline static auto vAliveTimerLimitRange = std::uniform_int_distribution<
-		int>(10'000, 30'000);
-
-	static_assert(
-		vAntibioSurviveChance < vAntibioKillingChance,
-		"survival chance is included in the killing chance;"
-		"an organism survives if a random value [1,AntibioKillingChance]"
-		" is less than or equal to the AntibioSurviveChance;"
-		"an organism dies if a random value [1,AntibioKillingChance]"
-		" is more than the AntibioSurviveChance;"
-	);
+	tSimBeing(tSimBeing *vAncestor = nullptr)
+		: vAliveTimerSince{std::chrono::duration_cast<std::chrono::seconds>(
+				std::chrono::steady_clock::now().time_since_epoch()
+			)}
+		, vAliveTimerLimit{vAncestor ? vAncestor->vAliveTimerLimit : std::chrono::seconds(vAliveTimerLimitRange(vRandomGen))}
+		, vReproTimerSince{vAliveTimerSince}
+		, vReproTimerLimit{vAncestor ? vAncestor->vReproTimerLimit : std::chrono::seconds(vReproTimerLimitRange(vRandomGen))}
+		, vReproIndex{vAncestor ? vAncestor->vReproIndex + 1 : 0} {
+		fLogErr(
+			"tSimBeing::tSimBeing",
+			"{}; {}; {}; {}; {}; {};",
+			(void *)vAncestor,
+			vAliveTimerSince,
+			vAliveTimerLimit,
+			vReproTimerSince,
+			vReproTimerLimit,
+			vReproIndex
+		);
+	}
 
 public://datadef
 
-	QTimer													vAliveTimer;
-	const std::chrono::milliseconds vAliveTimerPoint;//how long since birth?
-	const std::chrono::milliseconds vAliveTimerLimit;//how long until death?
+	const std::chrono::seconds vAliveTimerSince;//how long since birth?
+	const std::chrono::seconds vAliveTimerLimit;//how long until death?
 
-	QTimer													vReproTimer;
-	const std::chrono::milliseconds vReproTimerPoint;//how long since birth?
-	const std::chrono::milliseconds vReproTimerLimit;//how long until repro?
-	const long											vReproIndex;//the current generation number
+	const std::chrono::seconds vReproTimerSince;//how long since birth?
+	const std::chrono::seconds vReproTimerLimit;//how long until repro?
+
+	const long vReproIndex;//the current generation number
 };
 
 class tSimThread: public QThread {
@@ -65,27 +54,28 @@ class tSimThread: public QThread {
 
 public://codetor
 
-	tSimThread();
+	tSimThread(size_t vIndex);
 
 public://actions
 
 	void run() override;
 
-public://getters
+	void fRunStep();
 
-  const QVector<tSimBeing> &fStartRead() {
-		return this->vBeingArrayWas;
-	}
-	const QVector<tSimBeing> &fGiveBeingArray() {
-		return this->vBeingArrayWas;
-	}
+public slots:
+
+	void sTakeAntibioSlot();
+
+signals:
+
+	void sGiveUpdateCall(const size_t vIndex, QVector<tSimBeing> vSimBeingArray);
 
 public://datadef
 
-	QVector<tSimBeing> vBeingArrayWas;
-	QVector<tSimBeing> vBeingArrayNow;
-
+	size_t vIndex;
 	QMutex vMutex;
+
+	QVector<tSimBeing> vBeingArray;
 };
 
 //}
@@ -105,20 +95,27 @@ public://codetor
 
 public://actions
 
-	void fRunSim(unsigned vSimBeing1stCount);
+	void fRunSim(unsigned vSimThreadCount);
 
 	void fRunEventKeyPress(QKeyEvent *vQKeyEvent);
+
+public slots:
+
+	void sAboutToQuitSlot();
 
 signals:
 
 	void sRunSimCall();
 
+	void sTakeAntibioCall();
+
 public://datadef
 
 	std::unique_ptr<tAppWindow> vWindow;
 
-	unsigned						vSimThread1stCount;
-	QVector<tSimThread> vSimThreadArray;
+	QVector<std::shared_ptr<tSimThread>> vSimThreadArray;
+
+	QVector<tSimBeing> vSimBeingArray;
 };
 
 /* application window:
@@ -218,16 +215,36 @@ public://datadef
 
 /* simulation report scroll
  */
+class tSimReportScrollWidget;
 class tSimReportScroll: public QScrollArea {
-	Q_OBJECT
-
 public://codetor
 
 	tSimReportScroll(tSimReport *vSimReport);
 
+public://datadef
+
+	std::unique_ptr<tSimReportScrollWidget> vWidget;
+};
+
+class tSimReportScrollWidget: public QWidget {
+	Q_OBJECT
+
+public://codetor
+
+	tSimReportScrollWidget(tSimReportScroll *vSimReportScroll);
+	~tSimReportScrollWidget();
+
+public://actions
+
+	void fClean();
+
 public slots:
 
 	void sRunSimSlot();
+
+	void sGiveUpdateSlot(
+		const size_t vSimThreadIndex, QVector<tSimBeing> vSimBeingArray
+	);
 
 public://datadef
 

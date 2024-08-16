@@ -38,6 +38,7 @@ namespace {
 #include <fmt/format.h>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#include <fmt/chrono.h>
 
 #define fLog(vStream, vHeader, vString, ...)                  \
 	({                                                          \
