@@ -25,7 +25,7 @@ namespace nApp {
 
 	tApp::~tApp() {
 		delete this->vWindow;
-    disconnect();
+		disconnect();
 	}
 
 	//actions
@@ -61,9 +61,7 @@ namespace nApp {
 				)
 					.c_str()
 			);
-			fLogErr("TryKeyPress", "Quit is being done;");
 			this->quit();
-			fLogErr("TryKeyPress", "Quit has been done;");
 		} break;
 		default: {
 			if(vQKeyEvent->text()[0].isLetterOrNumber()) {
@@ -74,13 +72,10 @@ namespace nApp {
 		}
 	}
 
-	std::shared_ptr<nSim::tBeing> tApp::fNewSimBeing(nSim::tBeing *vAncestor) {
-		auto vBeing = std::make_shared<nSim::tBeing>(vAncestor);
-		connect(
-			this, &tApp::sTryAntibioCall, vBeing.get(), &nSim::tBeing::sTryAntibioSlot
-		);
-		connect(vBeing.get(), &nSim::tBeing::sBirthCall, this, [this]() {
-			fLogErr("BirthCall", "");
+	nSim::tBeing *tApp::fNewSimBeing(nSim::tBeing *vAncestor) {
+		auto vBeing = new nSim::tBeing(vAncestor);
+		connect(this, &tApp::sTryAntibioCall, vBeing, &nSim::tBeing::sTryAntibioSlot);
+		connect(vBeing, &nSim::tBeing::sBirthCall, this, [this]() {
 			auto vBeing = static_cast<nSim::tBeing *>(QObject::sender());
 			this->fNewSimBeing(vBeing);
 		});
@@ -90,7 +85,7 @@ namespace nApp {
 		vLayout->addWidget(vLabel, 1);
 		auto *vLabelItem = vLayout->itemAt(vLayout->count() - 1);
 
-		connect(vBeing.get(), &nSim::tBeing::sAliveCall, this, [vBeing, vLabel]() {
+		connect(vBeing, &nSim::tBeing::sAliveCall, this, [vBeing, vLabel]() {
 			auto vTimerPoint = std::chrono::duration_cast<nSim::tBeing::tTimerPoint>(
 				nSim::tBeing::tTimerClock::now().time_since_epoch()
 			);
@@ -110,27 +105,15 @@ namespace nApp {
 					.c_str()
 			);
 		});
-		connect(vBeing.get(), &nSim::tBeing::sDeathCall, this, [vBeing, vLabelItem]() {
-			fLogErr("DeathCall", "");
-			auto vWidget = vLabelItem->widget();
-			if(vWidget) {
-        fLogErr("DeathCall", "widget is being deleted;");
-				vWidget->setParent(nullptr);
-				delete vWidget;
-        fLogErr("DeathCall", "widget has been deleted;");
-			}
-      //fLogErr("DeathCall", "item is being deleted;");
-			//delete vLabelItem;
-      //fLogErr("DeathCall", "item has been deleted;");
-			vBeing->requestInterruption();
+		connect(vBeing, &nSim::tBeing::sDeathCall, this, [vBeing, vLabel, vLayout]() {
+			vLayout->removeWidget(vLabel);
+			delete vLabel;
 			vBeing->wait();
+			vBeing->setParent(nullptr);
+			delete vBeing;
 		});
 		vBeing->start();
-		connect(this, &tApp::aboutToQuit, this, [vBeing]() {
-			fLogErr("AboutToQuit", "");
-			vBeing->requestInterruption();
-			vBeing->wait();
-		});
+		connect(this, &tApp::aboutToQuit, vBeing, &nSim::tBeing::sAboutToQuitSlot);
 		return vBeing;
 	}
 

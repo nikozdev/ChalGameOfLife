@@ -7,7 +7,7 @@ namespace nSim {
 	//codetor
 
 	tBeing::tBeing(tBeing *vAncestor)
-		: QThread(nullptr)
+		: QThread(QApplication::instance())
 		, vAliveTimerSince{std::chrono::duration_cast<
 				tTimerPoint>(tTimerClock::now().time_since_epoch())}
 		, vAliveTimerLimit{vAncestor ? vAncestor->vAliveTimerLimit : std::chrono::seconds(std::uniform_int_distribution<unsigned>(vAliveTimerLimitMin, vAliveTimerLimitMax)(vRandomGen))}
@@ -15,20 +15,13 @@ namespace nSim {
 		, vReproTimerLimit{vAncestor ? vAncestor->vReproTimerLimit : std::chrono::seconds(std::uniform_int_distribution<unsigned>(vReproTimerLimitMin, vReproTimerLimitMax)(vRandomGen))}
 		, vReproIndex{vAncestor ? vAncestor->vReproIndex + 1 : 0}
 		, vMutex{} {
-		fLogErr(
-			"nSim::tBeing::tBeing",
-			"{}; {}; {}; {}; {}; {};",
-			(void *)vAncestor,
-			vAliveTimerSince,
-			vAliveTimerLimit,
-			vReproTimerSince,
-			vReproTimerLimit,
-			vReproIndex
-		);
 	}
 
 	tBeing::~tBeing() {
+    this->requestInterruption();
+    this->wait();
 		this->disconnect();
+    fLogErr("~tBeing()", "has been done");
 	}
 
 	//actions
@@ -55,15 +48,17 @@ namespace nSim {
 	//slots
 
 	void tBeing::sTryAntibioSlot() {
-		QMutexLocker vMutexLocker(&this->vMutex);
-    fLogErr("sTryAntibioSlot", "");
-
 		auto vAliveRange = std::uniform_int_distribution<
 			unsigned>(1, this->vAntibioAliveChance + this->vAntibioDeathChance);
 		if(vAliveRange(vRandomGen)) {
-			emit this->sDeathCall();
+			this->requestInterruption();
 		}
 	}
+
+  void tBeing::sAboutToQuitSlot() {
+    this->requestInterruption();
+    this->wait();
+  }
 
 	//}tBeing
 

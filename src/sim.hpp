@@ -33,6 +33,8 @@ namespace nSim {
 
 		void sTryAntibioSlot();
 
+		void sAboutToQuitSlot();
+
 	signals:
 
 		void sAliveCall();//on each loop iteration;

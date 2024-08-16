@@ -25,7 +25,6 @@ namespace nGui {
 		, v1stWindow{new t1stWindow(this)}
 		, vSimWindow{new tSimWindow(this)}
 		, vStack{new QStackedWidget(this)} {
-		fLogErr("AppWindow", "ctor");
 		{//Stack
 
 			this->setCentralWidget(this->vStack);
@@ -46,16 +45,9 @@ namespace nGui {
 		{//Fonts
 
 			auto vFontFpath = "data/FiraMono-Bold.ttf";
-			fLogErr("vFontFpath", "\"{}\";", vFontFpath);
-
 			auto vFontIndex = QFontDatabase::addApplicationFont(vFontFpath);
-			fLogErr("vFontIndex", "{};", vFontIndex);
-
 			auto vFontIdentArray = QFontDatabase::applicationFontFamilies(vFontIndex);
-			fLogErr("vFontIdentArray.length()", "{};", vFontIdentArray.length());
-
 			auto vFontIdent = vFontIdentArray.at(0);
-			fLogErr("vFontIdent", "\"{}\";", vFontIdent.toUtf8().constData());
 
 			auto vFontEntry = QFont(vFontIdent, 16);
 			vFontEntry.setBold(true);
@@ -88,7 +80,6 @@ namespace nGui {
 		, vLayout{new QVBoxLayout(this)}
 		, vPrompt{new QTextEdit("start prompt", this)}
 		, vButton{new QPushButton("start", this)} {
-		fLogErr("1stWindow", "ctor");
 		this->setLayout(this->vLayout);
 
 		this->vLayout->addWidget(this->vPrompt, 4);
@@ -142,7 +133,6 @@ namespace nGui {
 		, vPrompt{new QTextEdit("key prompt", this)}
 		, vOutput{new QTextEdit("key output", this)}
 		, vReport{new tSimReport(this)} {
-		fLogErr("SimWindow", "ctor");
 		this->setLayout(this->vLayout);
 
 		this->vLayout->addWidget(this->vPrompt, 3);
@@ -186,7 +176,6 @@ namespace nGui {
 		, vLayout{new QVBoxLayout(this)}
 		, vStatus{new QTextEdit(this)}
 		, vScroll{new tSimReportScroll(this)} {
-		fLogErr("SimReport", "ctor");
 		this->vLayout->addWidget(this->vStatus, 1);
 		this->vStatus->setReadOnly(1);
 
@@ -206,7 +195,6 @@ namespace nGui {
 
 	tSimReportScroll::tSimReportScroll(tSimReport *vSimReport)
 		: QScrollArea(vSimReport), vWidget{new tSimReportScrollWidget(this)} {
-		fLogErr("SimReportScroll", "ctor");
 		this->setWidget(this->vWidget);
 		this->setWidgetResizable(1);
 	}
@@ -220,7 +208,6 @@ namespace nGui {
 	tSimReportScrollWidget::
 		tSimReportScrollWidget(tSimReportScroll *vSimReportScroll)
 		: QWidget(vSimReportScroll), vLayout{new QVBoxLayout(this)} {
-		fLogErr("SimReportScrollWidget", "ctor");
 		this->setLayout(this->vLayout);
 	}
 

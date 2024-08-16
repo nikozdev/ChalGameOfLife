@@ -34,8 +34,7 @@ namespace nApp {
 
 	private://actions
 
-		std::shared_ptr<nSim::tBeing>
-		fNewSimBeing(nSim::tBeing *vAncestor = nullptr);
+		nSim::tBeing *fNewSimBeing(nSim::tBeing *vAncestor = nullptr);
 
 	signals:
 
