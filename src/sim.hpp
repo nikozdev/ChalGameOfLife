@@ -57,7 +57,7 @@ namespace nSim {
 		const tTimerPoint vAliveTimerSince;//how long since birth?
 		const tTimerPoint vAliveTimerLimit;//how long until death?
 
-		const tTimerPoint vReproTimerSince;//how long since birth?
+		tTimerPoint vReproTimerSince;//how long since birth?
 		const tTimerPoint vReproTimerLimit;//how long until repro?
 
 		const unsigned vReproIndex;//the current generation number
