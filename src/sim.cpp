@@ -21,7 +21,6 @@ namespace nSim {
     this->requestInterruption();
     this->wait();
 		this->disconnect();
-    fLogErr("~tBeing()", "has been done");
 	}
 
 	//actions
