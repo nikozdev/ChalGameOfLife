@@ -42,7 +42,7 @@ namespace nGui {
 				}
 			);
 		}
-		{//Fonts
+    if constexpr(0){//Fonts
 
 			auto vFontFpath = "data/FiraMono-Bold.ttf";
 			auto vFontIndex = QFontDatabase::addApplicationFont(vFontFpath);
