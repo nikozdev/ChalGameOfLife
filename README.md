@@ -27,3 +27,16 @@ the main thread:
 visible statistics:
 - how long until death;
 - how long until breed;
+
+## build
+
+the only way to build this project is by using cmake:
+```sh
+cmake -B build
+cmake --build build
+./build/pChalGameOfLife.exe
+```
+should work just fine for all platforms;
+
+note that qt6 must be installed on the system;
+> otherwise cmake is gonna be fetching qt6 from github for hours;
