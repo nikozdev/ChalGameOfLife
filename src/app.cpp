@@ -42,14 +42,25 @@ namespace nApp {
 		auto vQKeyValue = vQKeyBytes[0];
 		switch(vQKeyValue) {
 		case 'a': {
-			this->vWindow->vSimWindow->vOutput->setText(
-				fmt::format(
-					"[{}]: "
-					"Using antibiotics...",
-					vQKeyValue
-				)
-					.c_str()
-			);
+      if constexpr(0) {
+        this->vWindow->vSimWindow->vOutput->setText(
+          fmt::format(
+            "[{}]: "
+            "Using antibiotics...",
+            vQKeyValue
+          )
+          .c_str()
+        );
+      } else {
+        this->vWindow->vSimWindow->vOutput->setText(
+          fmt::format(
+            "[{}]: "
+            "Применяем антибиотик: случайное количество микро-организмов погибает.",
+            vQKeyValue
+          )
+          .c_str()
+        );
+      }
 			emit this->sTryAntibioCall();
 		} break;
 		case 'q': {
@@ -64,10 +75,15 @@ namespace nApp {
 			this->quit();
 		} break;
 		default: {
-			if(vQKeyEvent->text()[0].isLetterOrNumber()) {
-				this->vWindow->vSimWindow->vOutput
-					->setText(fmt::format("[{}]: Nothing to do;", vQKeyValue).c_str());
-			}
+      if(vQKeyEvent->text()[0].isLetterOrNumber()) {
+        if constexpr(0) {
+          this->vWindow->vSimWindow->vOutput
+          ->setText(fmt::format("[{}]: Nothing to do;", vQKeyValue).c_str());
+        } else {
+          this->vWindow->vSimWindow->vOutput
+          ->setText(fmt::format("[{}]: Делать нечего;", vQKeyValue).c_str());
+        }
+      }
 		} break;
 		}
 	}
@@ -89,21 +105,35 @@ namespace nApp {
 			auto vTimerPoint = std::chrono::duration_cast<nSim::tBeing::tTimerPoint>(
 				nSim::tBeing::tTimerClock::now().time_since_epoch()
 			);
-			vLabel->setText(
-				fmt::format(
-					"generation={};"
-					"\n- deathAfter={}; aliveSince={}; aliveLimit={};"
-					"\n- reproAfter={}; reproSince={}; reproLimit={};",
-					vBeing->vReproIndex,
-					vBeing->vAliveTimerLimit - (vTimerPoint - vBeing->vAliveTimerSince),
-					vBeing->vAliveTimerSince,
-					vBeing->vAliveTimerLimit,
-					vBeing->vReproTimerLimit - (vTimerPoint - vBeing->vReproTimerSince),
-					vBeing->vReproTimerSince,
-					vBeing->vReproTimerLimit
-				)
-					.c_str()
-			);
+      if constexpr(0) {
+        vLabel->setText(
+          fmt::format(
+            "generation={};"
+            "\n- deathAfter={}; aliveSince={}; aliveLimit={};"
+            "\n- reproAfter={}; reproSince={}; reproLimit={};",
+            vBeing->vReproIndex,
+            vBeing->vAliveTimerLimit - (vTimerPoint - vBeing->vAliveTimerSince),
+            vBeing->vAliveTimerSince,
+            vBeing->vAliveTimerLimit,
+            vBeing->vReproTimerLimit - (vTimerPoint - vBeing->vReproTimerSince),
+            vBeing->vReproTimerSince,
+            vBeing->vReproTimerLimit
+          )
+          .c_str()
+        );
+      } else {
+        vLabel->setText(
+          fmt::format(
+            "поколение: {};"
+            "\n- погибает через: {};"
+            "\n- размножение через: {};",
+            vBeing->vReproIndex,
+            vBeing->vAliveTimerLimit - (vTimerPoint - vBeing->vAliveTimerSince),
+            vBeing->vReproTimerLimit - (vTimerPoint - vBeing->vReproTimerSince)
+          )
+          .c_str()
+        );
+      }
 		});
 		connect(vBeing, &nSim::tBeing::sDeathCall, this, [vBeing, vLabel, vLayout]() {
 			vLayout->removeWidget(vLabel);

@@ -86,24 +86,32 @@ namespace nGui {
 
 		this->vLayout->addWidget(this->vPrompt, 4);
 		this->vPrompt->setReadOnly(1);
-		this->vPrompt->setText(
-			"Welcome to the micro-organism simulation!\n"
-			"Before we run the simulation,"
-			" we want you to configure this."
-			"\n"
-			"The configuration is gonna start"
-			" as soon as you hit the button below."
-		);
+    if constexpr(0) {
+      this->vPrompt->setText(
+        "Welcome to the micro-organism simulation!\n"
+        "Before we run the simulation,"
+        " we want you to configure this."
+        "\n"
+        "The configuration is gonna start"
+        " as soon as you hit the button below."
+      );
+    } else {
+      this->vPrompt->setText(
+        "Добро пожаловать в симуляцию микро-организмов!\n"
+        "Прежде чем мы начнем, прошу пройти настройку.\n"
+        "Настройка начнется, когда вы нажмете кнопку ниже."
+      );
+    }
 
 		this->vLayout->addWidget(this->vButton, 1);
-		this->vButton->setText("Config");
+		this->vButton->setText("Настроить");
 		connect(this->vButton, &QPushButton::clicked, this, [this]() {
 			bool vInputFlag;
 			auto vSimBeingCount = QInputDialog::getInt(
 				this,
-				"Starting Simulation",
+				"Начало Симуляции",
 				fmt::format(
-					"Enter the number of micro-organisms from {} to {}.",
+					"Введите количество микро-организмов от {} до {}.",
 					this->vSimBeingMinCount,
 					this->vSimBeingMaxCount
 				)
@@ -132,18 +140,26 @@ namespace nGui {
 	tSimWindow::tSimWindow(tAppWindow *vAppWindow)
 		: QWidget(vAppWindow)
 		, vLayout{new QVBoxLayout(this)}
-		, vPrompt{new QTextEdit("key prompt", this)}
-		, vOutput{new QTextEdit("key output", this)}
+		, vPrompt{new QTextEdit("", this)}
+		, vOutput{new QTextEdit("", this)}
 		, vReport{new tSimReport(this)} {
 		this->setLayout(this->vLayout);
 
 		this->vLayout->addWidget(this->vPrompt, 3);
 		this->vPrompt->setReadOnly(1);
-		this->vPrompt->setText(
-			"Hit one of the keys:"
-			"\n- 'a' to use antibiotics;"
-			"\n- 'q' to quit;"
-		);
+    if constexpr(0) {
+      this->vPrompt->setText(
+        "Hit one of the keys:"
+        "\n- 'a' to use antibiotics;"
+        "\n- 'q' to quit;"
+      );
+    } else {
+      this->vPrompt->setText(
+        "Нажмите одну из клавиш (английская раскладка):"
+        "\n- 'a' чтобы применить антибиотик;"
+        "\n- 'q' чтобы выйти;"
+      );
+    }
 
 		nUtil::fAddGuiHorLine(this, this->vLayout);
 
