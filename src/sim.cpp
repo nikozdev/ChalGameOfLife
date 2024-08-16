@@ -29,7 +29,6 @@ namespace nSim {
 	void tBeing::run() {
 		while(!this->isInterruptionRequested()) {
 			QMutexLocker vMutexLocker(&this->vMutex);
-			this->msleep(1'000);
 
 			auto vTimerPoint = std::chrono::duration_cast<
 				tTimerPoint>(tTimerClock::now().time_since_epoch());
@@ -41,6 +40,7 @@ namespace nSim {
 				emit this->sBirthCall();
 			}
 			emit this->sAliveCall();
+			this->msleep(100);
 		}
 		emit this->sDeathCall();
 	}
@@ -50,7 +50,7 @@ namespace nSim {
 	void tBeing::sTryAntibioSlot() {
 		auto vAliveRange = std::uniform_int_distribution<
 			unsigned>(1, this->vAntibioAliveChance + this->vAntibioDeathChance);
-		if(vAliveRange(vRandomGen)) {
+		if(vAliveRange(vRandomGen) <= this->vAntibioAliveChance) {
 			this->requestInterruption();
 		}
 	}
