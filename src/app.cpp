@@ -38,8 +38,11 @@ namespace nApp {
 	}
 
 	void tApp::fRunEventKeyPress(QKeyEvent *vQKeyEvent) {
-		auto vQKeyBytes = vQKeyEvent->text().toLower().toUtf8().constData();
+		auto vQKeyBytes = vQKeyEvent->text().toLower().toUtf8();
 		auto vQKeyValue = vQKeyBytes[0];
+    fLogErr("fRunEventKeyPress", "text:{};", vQKeyEvent->text().toUtf8());
+    fLogErr("fRunEventKeyPress", "bytes:{};", vQKeyBytes);
+    fLogErr("fRunEventKeyPress", "value:{};", vQKeyValue);
 		switch(vQKeyValue) {
 		case 'a': {
 			this->vWindow->vSimWindow->vOutput->setText(
